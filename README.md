@@ -78,17 +78,17 @@ SUPABASE_KEY=your_supabase_anon_or_service_key
 streamlit run app.py
 ```
 ---
-##🔐 Supabase Setup (Optional)
+🔐 Supabase Setup (Optional)
 - Go to https://supabase.io and create a project.
 - Enable email/password auth.
 - Use your project URL and anon/public key in the .env.
 ---
-##👨‍💻 Developer Notes
+👨‍💻 Developer Notes
 - Uses RL-style chapter ranking from user feedback.
 - Modular design with clear separation between scraping, AI agents, storage, and UI.
 - Multi-user support with private session-based libraries.
 ---
-##📝 License
+📝 License
 MIT License © 2025 Chilamkurthi Bhuvansai
 
 
