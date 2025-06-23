@@ -1,14 +1,9 @@
+from chromadb import PersistentClientAdd commentMore actions
 from chromadb.config import Settings
 import chromadb
 
-# Initialize Chroma client with DuckDB (safe for Streamlit Cloud)
-chroma_client = chromadb.Client(
-    Settings(
-        chroma_db_impl="duckdb+parquet",
-        persist_directory="./chromadb_store"
-    )
-)
-
+client = PersistentClient(path="./chromadb_store")
+collection = client.get_or_create_collection("books")
 # Create or get a collection
 collection = chroma_client.get_or_create_collection(name="book_versions")
 
