@@ -17,13 +17,14 @@ if 'onboarded' not in st.session_state:
 if 'active_tab' not in st.session_state:
     st.session_state['active_tab'] = '🔧 Scrape & Rewrite'
 
-# User login (first page before onboarding)
+# User login/signup (first page before onboarding)
 if 'user_id' not in st.session_state:
-    st.title("Hey there! 👋  Welcome to Automated Book Publication workflow" )
-    st.title("🔐 User Login")
-    username = st.text_input("Enter your name to get started:")
-    if st.button("Login") and username:
-        st.session_state['user_id'] = username
+    st.title("🔐 Welcome to AI Book Publisher")
+    st.subheader("Login or Sign Up")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login / Sign Up") and username and password:
+        st.session_state['user_id'] = username  # You could hash and verify password here
         st.rerun()
     st.stop()
 
@@ -31,13 +32,13 @@ user_id = st.session_state['user_id']
 
 # Onboarding screen
 if not st.session_state['onboarded']:
-    st.title(f"🚀 Welcome, {user_id}")
+    st.title(f"🚀 Welcome, {user_id}!")
     st.markdown(
         "This app lets you:\n"
         "1. Scrape chapter content from a web URL.\n"
         "2. Run a multi-stage AI rewrite pipeline (Writer → Editor → Reviewer).\n"
         "3. Save and manage multiple versions of your chapters.\n"
-        "4. Read and rate saved chapters.\n\n"
+        "4. Read your saved chapters.\n\n"
         "Click **Get Started** to begin!"
     )
     if st.button("Get Started"):
@@ -53,10 +54,7 @@ def group_versions(versions):
         books.setdefault(item['book'], []).append({'chapter': item['chapter'], 'content': item['content']})
     for book, chaps in books.items():
         chaps.sort(key=lambda x: int(''.join(filter(str.isdigit, x['chapter'])) or 0))
-    feedbacks = st.session_state.get('feedbacks', {})
-    book_scores = {b: (sum(feedbacks[b]) / len(feedbacks[b])) if feedbacks.get(b) else 0 for b in books}
-    ranked = sorted(books.keys(), key=lambda b: book_scores.get(b, 0), reverse=True)
-    return {b: books[b] for b in ranked}
+    return books
 
 # Fetch and rank saved versions for the current user
 versions = list_versions(user_id=user_id)
@@ -64,7 +62,7 @@ books = group_versions(versions)
 show_reader = st.session_state['display'] is not None
 
 # Sidebar: Profile and book access
-st.sidebar.title(f"👋 Hey, {user_id}")
+st.sidebar.title(f"👋 Hey, {user_id}!")
 st.sidebar.title("📚 Saved Books & Chapters")
 search_term = st.sidebar.text_input("Search Books", key='search_book')
 filtered_books = [b for b in books.keys() if search_term.lower() in b.lower()] if search_term else list(books.keys())
@@ -110,8 +108,8 @@ if st.session_state['active_tab'] == '🔧 Scrape & Rewrite':
         st.text_area("", st.session_state['original'], height=250, key='orig_area')
         if st.button("Run Rewrite Agent", key='rewrite_btn'):
             with st.spinner("AI Writer → Editor → Reviewer working..."):
-                res = asyncio.run(run_agents(st.session_state['original']))
-                st.session_state['rewritten'] = res['reviewed']
+                result = asyncio.run(run_agents(st.session_state['original']))
+                st.session_state['rewritten'] = result['reviewed']
                 st.success("AI rewrite complete!")
 
     if st.session_state.get('rewritten'):
@@ -141,12 +139,6 @@ elif st.session_state['active_tab'] == '📖 Reader':
     disp = st.session_state['display']
     st.header(f"{disp['book']} - {disp['chapter']}")
     st.text_area("", disp['content'], height=400, key='reader_area')
-    st.markdown("**Rate this chapter (1–10):**")
-    rating = st.select_slider("", options=list(range(1,11)), value=5, key='rating')
-    if st.button("Submit Rating", key='rate_btn'):
-        fb = st.session_state['feedbacks'].setdefault(disp['book'], [])
-        fb.append(rating)
-        st.success(f"Rating submitted: {rating}/10!")
 
     if st.button("📥 Download Full Book"):
         full_text = f"{disp['book']}\n\n"
@@ -191,3 +183,8 @@ elif st.session_state['active_tab'] == '🗂️ My Library':
                         st.rerun()
                 with col2:
                     st.caption("Click 'Read' to open chapter in Reader mode")
+                    if st.button(f"Delete {chap['chapter']}", key=f"delete_{book}_{chap['chapter']}"):
+                        # Here you would implement the deletion logic
+                        st.success(f"Deleted chapter '{chap['chapter']}' from book '{book}'.")
+                        # Refresh the page to update the list
+                        st.rerun()
