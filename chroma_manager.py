@@ -1,8 +1,18 @@
-from chromadb import PersistentClient
+from chromadb.config import Settings
+import chromadb
 
-client = PersistentClient(path="./chromadb_store")
-collection = client.get_or_create_collection("books")
+# Initialize Chroma client with DuckDB (safe for Streamlit Cloud)
+chroma_client = chromadb.Client(
+    Settings(
+        chroma_db_impl="duckdb+parquet",
+        persist_directory="./chromadb_store"
+    )
+)
 
+# Create or get a collection
+collection = chroma_client.get_or_create_collection(name="book_versions")
+
+# Save a version for a user
 def save_version(book, chapter, content, user_id):
     uid = f"{user_id}:{book}:{chapter}"
     collection.add(
@@ -15,6 +25,7 @@ def save_version(book, chapter, content, user_id):
         }]
     )
 
+# List all saved versions for a user
 def list_versions(user_id):
     results = collection.get(where={"user_id": user_id})
     versions = []
