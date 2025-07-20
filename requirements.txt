@@ -6,4 +6,3 @@ chromadb
 python-dotenv
 supabase
 httpx
-pysqlite3-binary
