@@ -1,4 +1,4 @@
-from chromadb import PersistentClientAdd
+from chromadb import PersistentClient
 from chromadb.config import Settings
 import chromadb
 
