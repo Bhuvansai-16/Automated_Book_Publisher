@@ -1,11 +1,11 @@
-from chromadb import PersistentClient
+from chromadb import PersistentClientAdd commentMore actions
 from chromadb.config import Settings
+import chromadb
 
-# Create a persistent Chroma client
 client = PersistentClient(path="./chromadb_store")
-
-# Create or get a collection once
-collection = client.get_or_create_collection(name="book_versions")
+collection = client.get_or_create_collection("books")
+# Create or get a collection
+collection = chroma_client.get_or_create_collection(name="book_versions")
 
 # Save a version for a user
 def save_version(book, chapter, content, user_id):
