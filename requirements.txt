@@ -4,5 +4,4 @@ beautifulsoup4
 google-generativeai
 chromadb
 python-dotenv
-httpx
 sqlite3
