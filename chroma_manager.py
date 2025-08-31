@@ -1,4 +1,11 @@
-# chroma_manager.py
+# Fix for sqlite version issue on Streamlit Cloud
+try:
+    __import__("pysqlite3")
+    import sys
+    sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+except ImportError:
+    pass
+
 from chromadb import PersistentClient
 
 # Initialize ChromaDB persistent client
