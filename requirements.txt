@@ -1,5 +1,6 @@
 streamlit>=1.37.0
-chromadb>=0.4.24
+chromadb
+pysqlite3-binary
 supabase>=2.5.0
 beautifulsoup4>=4.12.3
 requests>=2.31.0
