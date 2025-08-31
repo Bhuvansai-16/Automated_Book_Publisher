@@ -1,1 +1,27 @@
+# Core UI
+streamlit>=1.37.0
+
+# Database & Vector Store
+chromadb>=0.4.24
+
+# Authentication & Backend
+supabase-py>=2.4.0
+
+# Web Scraping
+beautifulsoup4>=4.12.3
+requests>=2.31.0
+
+# AI & LLM Orchestration
+langchain>=0.2.0
+langgraph>=0.0.40
+openai>=1.37.0   # or your chosen LLM provider (Gemini API later)
+tiktoken>=0.7.0  # for token handling
+
+# Data Handling
+pandas>=2.2.2
+numpy>=1.26.4
+
+# Optional (for clean dev experience)
+python-dotenv>=1.0.1   # manage API keys/env vars
+rich>=13.7.1           # better logging/debugging
 
