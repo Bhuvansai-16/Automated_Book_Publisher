@@ -1,33 +1,45 @@
-from chromadb import PersistentClientAdd
-from chromadb.config import Settings
-import chromadb
+# chroma_manager.py
+from chromadb import PersistentClient
 
-client = PersistentClient(path="./chromadb_store")
-collection = client.get_or_create_collection("books")
-# Create or get a collection
-collection = chroma_client.get_or_create_collection(name="book_versions")
+# Initialize ChromaDB persistent client
+client = PersistentClient(path="./chroma_data")
 
-# Save a version for a user
 def save_version(book, chapter, content, user_id):
-    uid = f"{user_id}:{book}:{chapter}"
-    collection.add(
-        documents=[content],
-        ids=[uid],
-        metadatas=[{
-            "user_id": user_id,
-            "book": book,
-            "chapter": chapter
-        }]
-    )
+    """
+    Save a final version of a chapter into ChromaDB.
+    Each saved version is tied to a specific user_id.
+    """
+    collection = client.get_or_create_collection("books")
+    doc_id = f"{user_id}_{book}_{chapter}"
 
-# List all saved versions for a user
+    # Add or update
+    try:
+        collection.add(
+            documents=[content],
+            metadatas=[{"book": book, "chapter": chapter, "user_id": user_id}],
+            ids=[doc_id]
+        )
+    except Exception:
+        # If doc_id already exists, update instead
+        collection.update(
+            documents=[content],
+            metadatas=[{"book": book, "chapter": chapter, "user_id": user_id}],
+            ids=[doc_id]
+        )
+
 def list_versions(user_id):
+    """
+    List all saved versions of books & chapters for a given user_id.
+    Returns a list of dicts with {book, chapter, content}.
+    """
+    collection = client.get_or_create_collection("books")
     results = collection.get(where={"user_id": user_id})
-    versions = []
-    for doc, meta in zip(results['documents'], results['metadatas']):
-        versions.append({
-            "book": meta['book'],
-            "chapter": meta['chapter'],
-            "content": doc
-        })
-    return versions
+
+    return [
+        {
+            "book": m["book"],
+            "chapter": m["chapter"],
+            "content": d
+        }
+        for d, m in zip(results["documents"], results["metadatas"])
+    ]
