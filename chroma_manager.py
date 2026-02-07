@@ -9,7 +9,21 @@ except ImportError:
 from chromadb import PersistentClient
 
 # Initialize ChromaDB persistent client
-client = PersistentClient(path="./chroma_data")
+client = PersistentClient(path="./chromadb_store")
+
+# Embedding dimension used by the default embedding function
+EMBEDDING_DIM = 384
+
+
+def _get_dummy_embeddings(n: int) -> list:
+    """Return dummy embeddings for n documents.
+    
+    Since we use ChromaDB as a simple document store (not for similarity search),
+    we don't need actual embeddings. This avoids the need to download ONNX models
+    while still satisfying ChromaDB's embedding requirement for the collection.
+    """
+    return [[0.0] * EMBEDDING_DIM for _ in range(n)]
+
 
 def save_version(book, chapter, content, user_id):
     """
@@ -19,20 +33,14 @@ def save_version(book, chapter, content, user_id):
     collection = client.get_or_create_collection("books")
     doc_id = f"{user_id}_{book}_{chapter}"
 
-    # Add or update
-    try:
-        collection.add(
-            documents=[content],
-            metadatas=[{"book": book, "chapter": chapter, "user_id": user_id}],
-            ids=[doc_id]
-        )
-    except Exception:
-        # If doc_id already exists, update instead
-        collection.update(
-            documents=[content],
-            metadatas=[{"book": book, "chapter": chapter, "user_id": user_id}],
-            ids=[doc_id]
-        )
+    # Use upsert with pre-computed embeddings to avoid downloading ONNX models
+    collection.upsert(
+        documents=[content],
+        metadatas=[{"book": book, "chapter": chapter, "user_id": user_id}],
+        ids=[doc_id],
+        embeddings=_get_dummy_embeddings(1)
+    )
+
 
 def list_versions(user_id):
     """
@@ -42,6 +50,9 @@ def list_versions(user_id):
     collection = client.get_or_create_collection("books")
     results = collection.get(where={"user_id": user_id})
 
+    if not results["documents"] or not results["metadatas"]:
+        return []
+
     return [
         {
             "book": m["book"],
@@ -50,3 +61,12 @@ def list_versions(user_id):
         }
         for d, m in zip(results["documents"], results["metadatas"])
     ]
+
+
+def delete_version(book, chapter, user_id):
+    """
+    Delete a specific chapter from the user's collection.
+    """
+    collection = client.get_or_create_collection("books")
+    doc_id = f"{user_id}_{book}_{chapter}"
+    collection.delete(ids=[doc_id])

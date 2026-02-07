@@ -1,7 +1,7 @@
 import streamlit as st
 from scraper import scrape_chapter
 from rewrite_engine import run_agents
-from chroma_manager import save_version, list_versions
+from chroma_manager import save_version, list_versions, delete_version
 import asyncio
 
 # Page config
@@ -138,7 +138,9 @@ if st.session_state['active_tab'] == '🔧 Scrape & Rewrite':
 elif st.session_state['active_tab'] == '📖 Reader':
     disp = st.session_state['display']
     st.header(f"{disp['book']} - {disp['chapter']}")
-    st.text_area("", disp['content'], height=400, key='reader_area')
+    # Use dynamic key based on book and chapter to ensure content updates when navigating
+    reader_key = f"reader_{disp['book']}_{disp['chapter']}"
+    st.text_area("", disp['content'], height=400, key=reader_key)
 
     if st.button("📥 Download Full Book"):
         full_text = f"{disp['book']}\n\n"
@@ -154,14 +156,22 @@ elif st.session_state['active_tab'] == '📖 Reader':
     idx = [c['chapter'] for c in books[disp['book']]].index(disp['chapter'])
     colp, coln = st.columns(2)
     with colp:
-        if st.button("Previous Chapter") and idx>0:
-            prev = books[disp['book']][idx-1]['chapter']
-            st.session_state['display']['chapter'] = prev
+        if st.button("Previous Chapter") and idx > 0:
+            prev_chap = books[disp['book']][idx - 1]
+            st.session_state['display'] = {
+                'book': disp['book'],
+                'chapter': prev_chap['chapter'],
+                'content': prev_chap['content']
+            }
             st.rerun()
     with coln:
-        if st.button("Next Chapter") and idx< len(books[disp['book']])-1:
-            nxtc = books[disp['book']][idx+1]['chapter']
-            st.session_state['display']['chapter'] = nxtc
+        if st.button("Next Chapter") and idx < len(books[disp['book']]) - 1:
+            next_chap = books[disp['book']][idx + 1]
+            st.session_state['display'] = {
+                'book': disp['book'],
+                'chapter': next_chap['chapter'],
+                'content': next_chap['content']
+            }
             st.rerun()
 
 elif st.session_state['active_tab'] == '🗂️ My Library':
@@ -184,7 +194,6 @@ elif st.session_state['active_tab'] == '🗂️ My Library':
                 with col2:
                     st.caption("Click 'Read' to open chapter in Reader mode")
                     if st.button(f"Delete {chap['chapter']}", key=f"delete_{book}_{chap['chapter']}"):
-                        # Here you would implement the deletion logic
+                        delete_version(book, chap['chapter'], user_id)
                         st.success(f"Deleted chapter '{chap['chapter']}' from book '{book}'.")
-                        # Refresh the page to update the list
                         st.rerun()
